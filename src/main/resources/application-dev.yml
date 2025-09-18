@@ -16,7 +16,3 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
-
-logging:
-  level:
-    hexlet.code: DEBUG

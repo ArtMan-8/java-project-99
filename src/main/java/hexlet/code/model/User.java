@@ -26,12 +26,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
     @Size(min = 1)
     @Column(name = "first_name")
     private String firstName;
 
-    @NotBlank
     @Size(min = 1)
     @Column(name = "last_name")
     private String lastName;
