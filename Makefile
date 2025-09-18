@@ -28,5 +28,8 @@ test-report: test # Подготовить покрытие тестов
 sonar: test-report
 	$(GRADLEW) sonar --info
 
-run: build # Запустить дистрибутив
-	$(BIN_APP)
+run-dev: build # Запустить в режиме разработки
+	$(BIN_APP) --spring.profiles.active=dev
+
+run-prod: build # Запустить в режиме продакшена
+	$(BIN_APP) --spring.profiles.active=prod
