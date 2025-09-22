@@ -17,12 +17,12 @@ public class DataInitializer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         if (userRepository.findByEmail("hexlet@example.com").isEmpty()) {
-            User user = new User();
-            user.setEmail("hexlet@example.com");
-            user.setFirstName("Hexlet");
-            user.setLastName("User");
-            user.setPassword(passwordEncoder.encode("qwerty"));
-            userRepository.save(user);
+            User admin = new User();
+            admin.setEmail("hexlet@example.com");
+            admin.setFirstName("Admin");
+            admin.setLastName("Admin");
+            admin.setPassword(passwordEncoder.encode("qwerty"));
+            userRepository.save(admin);
         }
     }
 }

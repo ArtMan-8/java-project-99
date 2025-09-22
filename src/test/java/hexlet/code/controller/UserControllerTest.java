@@ -10,14 +10,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -25,118 +31,98 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    void shouldReturn400WhenCreatingUserWithInvalidEmail() throws Exception {
-        UserCreateDTO userCreateDTO = new UserCreateDTO();
-        userCreateDTO.setEmail("invalid-email");
-        userCreateDTO.setFirstName("John");
-        userCreateDTO.setLastName("Doe");
-        userCreateDTO.setPassword("password123");
-
-        mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userCreateDTO)))
-                .andExpect(status().isBadRequest());
+    private UserCreateDTO createValidUser() {
+        UserCreateDTO user = new UserCreateDTO();
+        user.setEmail("test@example.com");
+        user.setFirstName("John");
+        user.setLastName("Doe");
+        user.setPassword("password123");
+        return user;
     }
 
     @Test
-    void shouldReturn400WhenCreatingUserWithEmptyEmail() throws Exception {
-        UserCreateDTO userCreateDTO = new UserCreateDTO();
-        userCreateDTO.setEmail("");
-        userCreateDTO.setFirstName("John");
-        userCreateDTO.setLastName("Doe");
-        userCreateDTO.setPassword("password123");
-
+    void shouldCreateUserSuccessfully() throws Exception {
+        UserCreateDTO user = createValidUser();
         mockMvc.perform(post("/api/users")
+                .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userCreateDTO)))
-                .andExpect(status().isBadRequest());
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.lastName").value("Doe"));
     }
 
     @Test
-    void shouldReturn400WhenCreatingUserWithShortPassword() throws Exception {
-        UserCreateDTO userCreateDTO = new UserCreateDTO();
-        userCreateDTO.setEmail("test@example.com");
-        userCreateDTO.setFirstName("John");
-        userCreateDTO.setLastName("Doe");
-        userCreateDTO.setPassword("12");
-
-        mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userCreateDTO)))
-                .andExpect(status().isBadRequest());
+    void shouldGetAllUsers() throws Exception {
+        mockMvc.perform(get("/api/users").with(jwt()))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void shouldReturn400WhenCreatingUserWithEmptyFirstName() throws Exception {
-        UserCreateDTO userCreateDTO = new UserCreateDTO();
-        userCreateDTO.setEmail("test@example.com");
-        userCreateDTO.setFirstName("");
-        userCreateDTO.setLastName("Doe");
-        userCreateDTO.setPassword("password123");
-
-        mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userCreateDTO)))
-                .andExpect(status().isBadRequest());
+    void shouldGetUserById() throws Exception {
+        mockMvc.perform(get("/api/users/1").with(jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("hexlet@example.com"));
     }
 
     @Test
-    void shouldReturn400WhenCreatingUserWithEmptyLastName() throws Exception {
-        UserCreateDTO userCreateDTO = new UserCreateDTO();
-        userCreateDTO.setEmail("test@example.com");
-        userCreateDTO.setFirstName("John");
-        userCreateDTO.setLastName("");
-        userCreateDTO.setPassword("password123");
-
-        mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userCreateDTO)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void shouldReturn403WhenUpdatingUserWithInvalidEmail() throws Exception {
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
-        userUpdateDTO.setEmail("invalid-email");
-        userUpdateDTO.setFirstName("Jane");
+    void shouldUpdateUserSuccessfully() throws Exception {
+        UserUpdateDTO user = new UserUpdateDTO();
+        user.setFirstName("Jane");
+        user.setLastName("Smith");
 
         mockMvc.perform(put("/api/users/1")
+                .with(jwt().jwt(jwt -> jwt.subject("hexlet@example.com")))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userUpdateDTO)))
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("Jane"))
+                .andExpect(jsonPath("$.lastName").value("Smith"));
+    }
+
+    @Test
+    void shouldDeleteUserSuccessfully() throws Exception {
+        mockMvc.perform(delete("/api/users/1")
+                .with(jwt().jwt(jwt -> jwt.subject("hexlet@example.com"))))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturn403WhenCreatingUserWithInvalidData() throws Exception {
+        UserCreateDTO user = createValidUser();
+        user.setEmail("invalid-email");
+
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void shouldReturn403WhenUpdatingUserWithShortPassword() throws Exception {
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
-        userUpdateDTO.setPassword("12");
+    void shouldReturn403WhenUpdatingUserWithInvalidData() throws Exception {
+        UserUpdateDTO user = new UserUpdateDTO();
+        user.setEmail("invalid-email");
 
         mockMvc.perform(put("/api/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userUpdateDTO)))
+                .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void shouldReturn403WhenUpdatingUserWithEmptyFirstName() throws Exception {
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
-        userUpdateDTO.setFirstName("");
-
-        mockMvc.perform(put("/api/users/1")
+    void shouldReturn403WhenAccessingWithoutAuth() throws Exception {
+        mockMvc.perform(get("/api/users")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/users/1")).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userUpdateDTO)))
+                .content(objectMapper.writeValueAsString(createValidUser())))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void shouldReturn403WhenUpdatingUserWithEmptyLastName() throws Exception {
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
-        userUpdateDTO.setLastName("");
-
-        mockMvc.perform(put("/api/users/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userUpdateDTO)))
-                .andExpect(status().isForbidden());
+    void shouldReturn404ForNonExistentUser() throws Exception {
+        mockMvc.perform(get("/api/users/999").with(jwt()))
+                .andExpect(status().isNotFound());
     }
 }

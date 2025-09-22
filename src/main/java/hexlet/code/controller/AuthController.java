@@ -31,17 +31,17 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO authRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            authRequest.getEmail(),
-                            authRequest.getPassword()
-                    )
+                new UsernamePasswordAuthenticationToken(
+                    authRequest.getUsername(),
+                    authRequest.getPassword()
+                )
             );
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String token = jwtUtils.generateToken(userDetails);
 
-            UserResponseDTO user = userService.getUserByEmail(authRequest.getEmail())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            UserResponseDTO user = userService.getUserByEmail(authRequest.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
             AuthResponseDTO response = new AuthResponseDTO();
             response.setToken(token);

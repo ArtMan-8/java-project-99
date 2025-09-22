@@ -4,6 +4,10 @@ spring:
     hibernate:
       ddl-auto: update
 
+rsa:
+  private-key: classpath:certs/private.pem
+  public-key: classpath:certs/public.pem
+
 logging:
   level:
     org.hibernate.SQL: DEBUG
