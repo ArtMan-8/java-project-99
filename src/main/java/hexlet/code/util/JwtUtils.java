@@ -1,59 +1,30 @@
 package hexlet.code.util;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Component
+@RequiredArgsConstructor
 public class JwtUtils {
-    @Value("${jwt.expiration:86400000}")
-    private Long expiration;
-
     private final JwtEncoder jwtEncoder;
-    private final JwtDecoder jwtDecoder;
 
-    public JwtUtils(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder) {
-        this.jwtEncoder = jwtEncoder;
-        this.jwtDecoder = jwtDecoder;
-    }
-
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(String username) {
         Instant now = Instant.now();
-        Instant expiry = now.plusMillis(expiration);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .subject(userDetails.getUsername())
+                .issuer("self")
+                .subject(username)
                 .issuedAt(now)
-                .expiresAt(expiry)
+                .expiresAt(now.plus(1, ChronoUnit.HOURS))
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-    }
-
-    public String extractUsername(String token) {
-        return jwtDecoder.decode(token).getSubject();
-    }
-
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        try {
-            String username = extractUsername(token);
-            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private boolean isTokenExpired(String token) {
-        try {
-            return jwtDecoder.decode(token).getExpiresAt().isBefore(Instant.now());
-        } catch (Exception e) {
-            return true;
-        }
     }
 }

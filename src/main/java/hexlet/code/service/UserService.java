@@ -1,8 +1,8 @@
 package hexlet.code.service;
 
-import hexlet.code.dto.UserCreateDTO;
-import hexlet.code.dto.UserResponseDTO;
-import hexlet.code.dto.UserUpdateDTO;
+import hexlet.code.dto.User.UserCreateDTO;
+import hexlet.code.dto.User.UserResponseDTO;
+import hexlet.code.dto.User.UserUpdateDTO;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +28,10 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll().stream()
                 .map(this::toResponseDTO)
                 .toList();
+    }
+
+    public long getTotalUsersCount() {
+        return userRepository.count();
     }
 
     public Optional<UserResponseDTO> getUserById(Long id) {
@@ -77,11 +81,6 @@ public class UserService implements UserDetailsService {
         }
 
         return false;
-    }
-
-    public Optional<UserResponseDTO> getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .map(this::toResponseDTO);
     }
 
     @Override

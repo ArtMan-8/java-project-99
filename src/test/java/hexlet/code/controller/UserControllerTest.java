@@ -1,8 +1,10 @@
 package hexlet.code.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hexlet.code.dto.UserCreateDTO;
-import hexlet.code.dto.UserUpdateDTO;
+
+import hexlet.code.dto.User.UserCreateDTO;
+import hexlet.code.dto.User.UserUpdateDTO;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -89,35 +91,37 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturn403WhenCreatingUserWithInvalidData() throws Exception {
+    void shouldReturn400WhenCreatingUserWithInvalidData() throws Exception {
         UserCreateDTO user = createValidUser();
         user.setEmail("invalid-email");
 
         mockMvc.perform(post("/api/users")
+                .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void shouldReturn403WhenUpdatingUserWithInvalidData() throws Exception {
+    void shouldReturn400WhenUpdatingUserWithInvalidData() throws Exception {
         UserUpdateDTO user = new UserUpdateDTO();
         user.setEmail("invalid-email");
 
         mockMvc.perform(put("/api/users/1")
+                .with(jwt().jwt(jwt -> jwt.subject("hexlet@example.com")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void shouldReturn403WhenAccessingWithoutAuth() throws Exception {
-        mockMvc.perform(get("/api/users")).andExpect(status().isForbidden());
-        mockMvc.perform(get("/api/users/1")).andExpect(status().isForbidden());
+    void shouldReturn401WhenAccessingWithoutAuth() throws Exception {
+        mockMvc.perform(get("/api/users")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/users/1")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createValidUser())))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
