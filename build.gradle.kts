@@ -27,9 +27,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 	implementation("org.springframework.boot:spring-boot-devtools")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
+    implementation("org.mapstruct:mapstruct:1.6.3")
     implementation("org.postgresql:postgresql")
 
     runtimeOnly("com.h2database:h2")
+
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")

@@ -3,6 +3,7 @@ package hexlet.code.service;
 import hexlet.code.dto.User.UserCreateDTO;
 import hexlet.code.dto.User.UserResponseDTO;
 import hexlet.code.dto.User.UserUpdateDTO;
+import hexlet.code.mapper.UserMapper;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +24,10 @@ import java.util.Optional;
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     public List<UserResponseDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::toResponseDTO)
-                .toList();
+        return userMapper.toResponseDTOList(userRepository.findAll());
     }
 
     public long getTotalUsersCount() {
@@ -36,41 +36,25 @@ public class UserService implements UserDetailsService {
 
     public Optional<UserResponseDTO> getUserById(Long id) {
         return userRepository.findById(id)
-                .map(this::toResponseDTO);
+                .map(userMapper::toResponseDTO);
     }
 
     public UserResponseDTO createUser(UserCreateDTO userCreateDTO) {
-        User user = new User();
-        user.setEmail(userCreateDTO.getEmail());
-        user.setFirstName(userCreateDTO.getFirstName());
-        user.setLastName(userCreateDTO.getLastName());
+        User user = userMapper.toEntity(userCreateDTO);
         user.setPassword(passwordEncoder.encode(userCreateDTO.getPassword()));
-
         User savedUser = userRepository.save(user);
-        return toResponseDTO(savedUser);
+        return userMapper.toResponseDTO(savedUser);
     }
 
     public Optional<UserResponseDTO> updateUser(Long id, UserUpdateDTO userUpdateDTO) {
         return userRepository.findById(id)
                 .map(user -> {
-                    if (userUpdateDTO.getEmail() != null) {
-                        user.setEmail(userUpdateDTO.getEmail());
-                    }
-
-                    if (userUpdateDTO.getFirstName() != null) {
-                        user.setFirstName(userUpdateDTO.getFirstName());
-                    }
-
-                    if (userUpdateDTO.getLastName() != null) {
-                        user.setLastName(userUpdateDTO.getLastName());
-                    }
-
+                    userMapper.updateEntity(userUpdateDTO, user);
                     if (userUpdateDTO.getPassword() != null) {
                         user.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
                     }
-
                     User savedUser = userRepository.save(user);
-                    return toResponseDTO(savedUser);
+                    return userMapper.toResponseDTO(savedUser);
                 });
     }
 
@@ -93,15 +77,5 @@ public class UserService implements UserDetailsService {
                 .password(user.getPassword())
                 .authorities(new SimpleGrantedAuthority("ROLE_USER"))
                 .build();
-    }
-
-    private UserResponseDTO toResponseDTO(User user) {
-        UserResponseDTO dto = new UserResponseDTO();
-        dto.setId(user.getId());
-        dto.setEmail(user.getEmail());
-        dto.setFirstName(user.getFirstName());
-        dto.setLastName(user.getLastName());
-        dto.setCreatedAt(user.getCreatedAt());
-        return dto;
     }
 }

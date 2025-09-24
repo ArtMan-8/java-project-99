@@ -3,6 +3,7 @@ package hexlet.code.service;
 import hexlet.code.dto.Task.TaskCreateDTO;
 import hexlet.code.dto.Task.TaskResponseDTO;
 import hexlet.code.dto.Task.TaskUpdateDTO;
+import hexlet.code.mapper.TaskMapper;
 import hexlet.code.model.Label;
 import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
@@ -28,24 +29,21 @@ public class TaskService {
     private final UserRepository userRepository;
     private final TaskStatusRepository taskStatusRepository;
     private final LabelRepository labelRepository;
+    private final TaskMapper taskMapper;
 
     public List<TaskResponseDTO> getAllTasks() {
-        return taskRepository.findAll().stream()
-                .map(this::toResponseDTO)
-                .toList();
+        return taskMapper.toResponseDTOList(taskRepository.findAll());
     }
 
     public Optional<TaskResponseDTO> getTaskById(Long id) {
         return taskRepository.findById(id)
-                .map(this::toResponseDTO);
+                .map(taskMapper::toResponseDTO);
     }
 
     public TaskResponseDTO createTask(TaskCreateDTO taskCreateDTO) {
-        Task task = new Task();
-        task.setIndex(taskCreateDTO.getIndex());
-        task.setTitle(taskCreateDTO.getTitle());
-        task.setContent(taskCreateDTO.getContent());
+        Task task = taskMapper.toEntity(taskCreateDTO);
 
+        // Устанавливаем связи, которые не могут быть автоматически замаплены
         if (taskCreateDTO.getAssigneeId() != null) {
             User assignee = userRepository.findById(taskCreateDTO.getAssigneeId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + taskCreateDTO.getAssigneeId()));
@@ -67,24 +65,16 @@ public class TaskService {
         }
 
         Task savedTask = taskRepository.save(task);
-        return toResponseDTO(savedTask);
+        return taskMapper.toResponseDTO(savedTask);
     }
 
     public Optional<TaskResponseDTO> updateTask(Long id, TaskUpdateDTO taskUpdateDTO) {
         return taskRepository.findById(id)
                 .map(task -> {
-                    if (taskUpdateDTO.getIndex() != null) {
-                        task.setIndex(taskUpdateDTO.getIndex());
-                    }
+                    // Обновляем простые поля через маппер
+                    taskMapper.updateEntity(taskUpdateDTO, task);
 
-                    if (taskUpdateDTO.getTitle() != null) {
-                        task.setTitle(taskUpdateDTO.getTitle());
-                    }
-
-                    if (taskUpdateDTO.getContent() != null) {
-                        task.setContent(taskUpdateDTO.getContent());
-                    }
-
+                    // Обновляем связи вручную
                     var assigneeId = taskUpdateDTO.getAssigneeId();
                     if (assigneeId != null) {
                         User assignee = userRepository.findById(assigneeId)
@@ -110,7 +100,7 @@ public class TaskService {
                     }
 
                     Task savedTask = taskRepository.save(task);
-                    return toResponseDTO(savedTask);
+                    return taskMapper.toResponseDTO(savedTask);
                 });
     }
 
@@ -123,26 +113,4 @@ public class TaskService {
         return false;
     }
 
-    private TaskResponseDTO toResponseDTO(Task task) {
-        TaskResponseDTO dto = new TaskResponseDTO();
-        dto.setId(task.getId());
-        dto.setIndex(task.getIndex());
-        dto.setCreatedAt(task.getCreatedAt());
-        dto.setTitle(task.getTitle());
-        dto.setContent(task.getContent());
-        dto.setStatus(task.getTaskStatus().getSlug());
-
-        if (task.getAssignee() != null) {
-            dto.setAssigneeId(task.getAssignee().getId());
-        }
-
-        if (task.getLabels() != null) {
-            Set<Long> labelIds = task.getLabels().stream()
-                .map(Label::getId)
-                .collect(java.util.stream.Collectors.toSet());
-            dto.setLabelIds(labelIds);
-        }
-
-        return dto;
-    }
 }

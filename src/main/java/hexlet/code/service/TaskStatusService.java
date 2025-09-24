@@ -3,6 +3,7 @@ package hexlet.code.service;
 import hexlet.code.dto.TaskStatus.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatus.TaskStatusResponseDTO;
 import hexlet.code.dto.TaskStatus.TaskStatusUpdateDTO;
+import hexlet.code.mapper.TaskStatusMapper;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.repository.TaskStatusRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +18,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TaskStatusService {
     private final TaskStatusRepository taskStatusRepository;
+    private final TaskStatusMapper taskStatusMapper;
 
     public List<TaskStatusResponseDTO> getAllTaskStatuses() {
-        return taskStatusRepository.findAll().stream()
-                .map(this::toResponseDTO)
-                .toList();
+        return taskStatusMapper.toResponseDTOList(taskStatusRepository.findAll());
     }
 
     public long getTotalTaskStatusesCount() {
@@ -30,31 +30,21 @@ public class TaskStatusService {
 
     public Optional<TaskStatusResponseDTO> getTaskStatusById(Long id) {
         return taskStatusRepository.findById(id)
-                .map(this::toResponseDTO);
+                .map(taskStatusMapper::toResponseDTO);
     }
 
     public TaskStatusResponseDTO createTaskStatus(TaskStatusCreateDTO taskStatusCreateDTO) {
-        TaskStatus taskStatus = new TaskStatus();
-        taskStatus.setName(taskStatusCreateDTO.getName());
-        taskStatus.setSlug(taskStatusCreateDTO.getSlug());
-
+        TaskStatus taskStatus = taskStatusMapper.toEntity(taskStatusCreateDTO);
         TaskStatus savedTaskStatus = taskStatusRepository.save(taskStatus);
-        return toResponseDTO(savedTaskStatus);
+        return taskStatusMapper.toResponseDTO(savedTaskStatus);
     }
 
     public Optional<TaskStatusResponseDTO> updateTaskStatus(Long id, TaskStatusUpdateDTO taskStatusUpdateDTO) {
         return taskStatusRepository.findById(id)
                 .map(taskStatus -> {
-                    if (taskStatusUpdateDTO.getName() != null) {
-                        taskStatus.setName(taskStatusUpdateDTO.getName());
-                    }
-
-                    if (taskStatusUpdateDTO.getSlug() != null) {
-                        taskStatus.setSlug(taskStatusUpdateDTO.getSlug());
-                    }
-
+                    taskStatusMapper.updateEntity(taskStatusUpdateDTO, taskStatus);
                     TaskStatus savedTaskStatus = taskStatusRepository.save(taskStatus);
-                    return toResponseDTO(savedTaskStatus);
+                    return taskStatusMapper.toResponseDTO(savedTaskStatus);
                 });
     }
 
@@ -65,14 +55,5 @@ public class TaskStatusService {
         }
 
         return false;
-    }
-
-    private TaskStatusResponseDTO toResponseDTO(TaskStatus taskStatus) {
-        TaskStatusResponseDTO dto = new TaskStatusResponseDTO();
-        dto.setId(taskStatus.getId());
-        dto.setName(taskStatus.getName());
-        dto.setSlug(taskStatus.getSlug());
-        dto.setCreatedAt(taskStatus.getCreatedAt());
-        return dto;
     }
 }

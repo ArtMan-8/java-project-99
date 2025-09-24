@@ -3,6 +3,7 @@ package hexlet.code.service;
 import hexlet.code.dto.Label.LabelCreateDTO;
 import hexlet.code.dto.Label.LabelResponseDTO;
 import hexlet.code.dto.Label.LabelUpdateDTO;
+import hexlet.code.mapper.LabelMapper;
 import hexlet.code.model.Label;
 import hexlet.code.repository.LabelRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,16 +19,15 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LabelService {
     private final LabelRepository labelRepository;
+    private final LabelMapper labelMapper;
 
     public List<LabelResponseDTO> getAllLabels() {
-        return labelRepository.findAll().stream()
-                .map(this::toResponseDTO)
-                .toList();
+        return labelMapper.toResponseDTOList(labelRepository.findAll());
     }
 
     public Optional<LabelResponseDTO> getLabelById(Long id) {
         return labelRepository.findById(id)
-                .map(this::toResponseDTO);
+                .map(labelMapper::toResponseDTO);
     }
 
     public LabelResponseDTO createLabel(LabelCreateDTO labelCreateDTO) {
@@ -36,22 +36,17 @@ public class LabelService {
             throw new DataIntegrityViolationException("Label with name '" + labelName + "' already exists");
         }
 
-        Label label = new Label();
-        label.setName(labelName);
-
+        Label label = labelMapper.toEntity(labelCreateDTO);
         Label savedLabel = labelRepository.save(label);
-        return toResponseDTO(savedLabel);
+        return labelMapper.toResponseDTO(savedLabel);
     }
 
     public Optional<LabelResponseDTO> updateLabel(Long id, LabelUpdateDTO labelUpdateDTO) {
         return labelRepository.findById(id)
                 .map(label -> {
-                    if (labelUpdateDTO.getName() != null) {
-                        label.setName(labelUpdateDTO.getName());
-                    }
-
+                    labelMapper.updateEntity(labelUpdateDTO, label);
                     Label savedLabel = labelRepository.save(label);
-                    return toResponseDTO(savedLabel);
+                    return labelMapper.toResponseDTO(savedLabel);
                 });
     }
 
@@ -64,11 +59,4 @@ public class LabelService {
         return false;
     }
 
-    private LabelResponseDTO toResponseDTO(Label label) {
-        LabelResponseDTO dto = new LabelResponseDTO();
-        dto.setId(label.getId());
-        dto.setName(label.getName());
-        dto.setCreatedAt(label.getCreatedAt());
-        return dto;
-    }
 }
