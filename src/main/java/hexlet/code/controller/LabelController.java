@@ -32,7 +32,10 @@ public class LabelController {
     @GetMapping
     public ResponseEntity<List<LabelResponseDTO>> getAllLabels() {
         List<LabelResponseDTO> labels = labelService.getAllLabels();
-        return ResponseEntity.ok(labels);
+        long totalCount = labelService.getTotalLabelsCount();
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(totalCount))
+                .body(labels);
     }
 
     @GetMapping("/{id}")

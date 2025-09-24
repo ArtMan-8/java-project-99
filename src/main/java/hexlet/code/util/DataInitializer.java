@@ -37,7 +37,7 @@ public class DataInitializer implements ApplicationRunner {
             admin.setEmail("hexlet@example.com");
             admin.setFirstName("Admin");
             admin.setLastName("Admin");
-            admin.setPassword(passwordEncoder.encode("qwerty"));
+            admin.setPassword(passwordEncoder.encode("qwerty")); // NOSONAR - тестовый пароль для инициализации данных
             userRepository.save(admin);
         }
     }

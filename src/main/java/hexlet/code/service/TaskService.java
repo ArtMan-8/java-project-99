@@ -35,6 +35,10 @@ public class TaskService {
         return taskMapper.toResponseDTOList(taskRepository.findAll());
     }
 
+    public long getTotalTasksCount() {
+        return taskRepository.count();
+    }
+
     public Optional<TaskResponseDTO> getTaskById(Long id) {
         return taskRepository.findById(id)
                 .map(taskMapper::toResponseDTO);

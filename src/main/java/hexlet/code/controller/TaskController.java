@@ -32,7 +32,10 @@ public class TaskController {
     @GetMapping
     public ResponseEntity<List<TaskResponseDTO>> getAllTasks() {
         List<TaskResponseDTO> tasks = taskService.getAllTasks();
-        return ResponseEntity.ok(tasks);
+        long totalCount = taskService.getTotalTasksCount();
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(totalCount))
+                .body(tasks);
     }
 
     @GetMapping("/{id}")
