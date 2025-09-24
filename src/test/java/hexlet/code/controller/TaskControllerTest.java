@@ -40,6 +40,7 @@ class TaskControllerTest {
         task.setContent("Test content");
         task.setStatus("draft");
         task.setAssigneeId(1L);
+        task.setLabelIds(java.util.Set.of(1L, 2L));
         return task;
     }
 
@@ -55,7 +56,9 @@ class TaskControllerTest {
                 .andExpect(jsonPath("$.content").value("Test content"))
                 .andExpect(jsonPath("$.status").value("draft"))
                 .andExpect(jsonPath("$.assigneeId").value(1))
-                .andExpect(jsonPath("$.index").value(1));
+                .andExpect(jsonPath("$.index").value(1))
+                .andExpect(jsonPath("$.labelIds").isArray())
+                .andExpect(jsonPath("$.labelIds.length()").value(2));
     }
 
     @Test
@@ -85,6 +88,7 @@ class TaskControllerTest {
         updateTask.setTitle("Updated Task");
         updateTask.setContent("Updated content");
         updateTask.setStatus("to_review");
+        updateTask.setLabelIds(java.util.Set.of(1L));
 
         mockMvc.perform(put("/api/tasks/1")
                 .with(jwt())
@@ -93,7 +97,9 @@ class TaskControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Updated Task"))
                 .andExpect(jsonPath("$.content").value("Updated content"))
-                .andExpect(jsonPath("$.status").value("to_review"));
+                .andExpect(jsonPath("$.status").value("to_review"))
+                .andExpect(jsonPath("$.labelIds").isArray())
+                .andExpect(jsonPath("$.labelIds.length()").value(1));
     }
 
     @Test

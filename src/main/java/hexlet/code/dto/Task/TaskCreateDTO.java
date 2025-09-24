@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.Set;
+
 @Data
 public class TaskCreateDTO {
     @NotNull
@@ -21,4 +23,6 @@ public class TaskCreateDTO {
     @NotBlank
     @Size(min = 1)
     private String status;
+
+    private Set<Long> labelIds;
 }

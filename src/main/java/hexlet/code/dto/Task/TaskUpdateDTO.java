@@ -3,6 +3,8 @@ package hexlet.code.dto.Task;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.Set;
+
 @Data
 public class TaskUpdateDTO {
     private Integer index;
@@ -16,4 +18,6 @@ public class TaskUpdateDTO {
 
     @Size(min = 1)
     private String status;
+
+    private Set<Long> labelIds;
 }

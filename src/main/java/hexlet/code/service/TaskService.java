@@ -3,9 +3,11 @@ package hexlet.code.service;
 import hexlet.code.dto.Task.TaskCreateDTO;
 import hexlet.code.dto.Task.TaskResponseDTO;
 import hexlet.code.dto.Task.TaskUpdateDTO;
+import hexlet.code.model.Label;
 import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.model.User;
+import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
@@ -13,8 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -23,6 +27,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final TaskStatusRepository taskStatusRepository;
+    private final LabelRepository labelRepository;
 
     public List<TaskResponseDTO> getAllTasks() {
         return taskRepository.findAll().stream()
@@ -50,6 +55,16 @@ public class TaskService {
         TaskStatus taskStatus = taskStatusRepository.findBySlug(taskCreateDTO.getStatus())
             .orElseThrow(() -> new RuntimeException("TaskStatus not found with slug: " + taskCreateDTO.getStatus()));
         task.setTaskStatus(taskStatus);
+
+        if (taskCreateDTO.getLabelIds() != null && !taskCreateDTO.getLabelIds().isEmpty()) {
+            Set<Label> labels = new HashSet<>();
+            for (Long labelId : taskCreateDTO.getLabelIds()) {
+                Label label = labelRepository.findById(labelId)
+                    .orElseThrow(() -> new RuntimeException("Label not found with id: " + labelId));
+                labels.add(label);
+            }
+            task.setLabels(labels);
+        }
 
         Task savedTask = taskRepository.save(task);
         return toResponseDTO(savedTask);
@@ -84,6 +99,16 @@ public class TaskService {
                         task.setTaskStatus(taskStatus);
                     }
 
+                    if (taskUpdateDTO.getLabelIds() != null) {
+                        Set<Label> labels = new HashSet<>();
+                        for (Long labelId : taskUpdateDTO.getLabelIds()) {
+                            Label label = labelRepository.findById(labelId)
+                                .orElseThrow(() -> new RuntimeException("Label not found with id: " + labelId));
+                            labels.add(label);
+                        }
+                        task.setLabels(labels);
+                    }
+
                     Task savedTask = taskRepository.save(task);
                     return toResponseDTO(savedTask);
                 });
@@ -109,6 +134,13 @@ public class TaskService {
 
         if (task.getAssignee() != null) {
             dto.setAssigneeId(task.getAssignee().getId());
+        }
+
+        if (task.getLabels() != null) {
+            Set<Long> labelIds = task.getLabels().stream()
+                .map(Label::getId)
+                .collect(java.util.stream.Collectors.toSet());
+            dto.setLabelIds(labelIds);
         }
 
         return dto;

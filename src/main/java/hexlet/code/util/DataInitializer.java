@@ -1,8 +1,10 @@
 package hexlet.code.util;
 
+import hexlet.code.model.Label;
 import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.model.User;
+import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
@@ -18,12 +20,14 @@ public class DataInitializer implements ApplicationRunner {
     private final UserRepository userRepository;
     private final TaskStatusRepository taskStatusRepository;
     private final TaskRepository taskRepository;
+    private final LabelRepository labelRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         initDefaultUsers();
         initDefaultTaskStatuses();
+        initDefaultLabels();
         initDefaultTasks();
     }
 
@@ -56,6 +60,24 @@ public class DataInitializer implements ApplicationRunner {
                 taskStatus.setSlug(slug);
                 taskStatus.setName(name);
                 taskStatusRepository.save(taskStatus);
+            }
+        }
+    }
+
+    private void initDefaultLabels() {
+        String[] labels = {
+            "bug",
+            "feature",
+            "enhancement",
+            "documentation",
+            "urgent"
+        };
+
+        for (String labelName : labels) {
+            if (labelRepository.findByName(labelName).isEmpty()) {
+                Label label = new Label();
+                label.setName(labelName);
+                labelRepository.save(label);
             }
         }
     }
