@@ -30,10 +30,6 @@ public class UserService implements UserDetailsService {
         return userMapper.toResponseDTOList(userRepository.findAll());
     }
 
-    public long getTotalUsersCount() {
-        return userRepository.count();
-    }
-
     public Optional<UserResponseDTO> getUserById(Long id) {
         return userRepository.findById(id)
                 .map(userMapper::toResponseDTO);

@@ -25,10 +25,6 @@ public class LabelService {
         return labelMapper.toResponseDTOList(labelRepository.findAll());
     }
 
-    public long getTotalLabelsCount() {
-        return labelRepository.count();
-    }
-
     public Optional<LabelResponseDTO> getLabelById(Long id) {
         return labelRepository.findById(id)
                 .map(labelMapper::toResponseDTO);

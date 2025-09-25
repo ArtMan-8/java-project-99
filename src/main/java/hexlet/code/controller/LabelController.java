@@ -32,9 +32,8 @@ public class LabelController {
     @GetMapping
     public ResponseEntity<List<LabelResponseDTO>> getAllLabels() {
         List<LabelResponseDTO> labels = labelService.getAllLabels();
-        long totalCount = labelService.getTotalLabelsCount();
         return ResponseEntity.ok()
-                .header("X-Total-Count", String.valueOf(totalCount))
+                .header("X-Total-Count", String.valueOf(labels.size()))
                 .body(labels);
     }
 

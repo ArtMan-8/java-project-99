@@ -34,9 +34,8 @@ public class TaskStatusController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TaskStatusResponseDTO>> getAllTaskStatuses() {
         List<TaskStatusResponseDTO> taskStatuses = taskStatusService.getAllTaskStatuses();
-        long totalCount = taskStatusService.getTotalTaskStatusesCount();
         return ResponseEntity.ok()
-                .header("X-Total-Count", String.valueOf(totalCount))
+                .header("X-Total-Count", String.valueOf(taskStatuses.size()))
                 .body(taskStatuses);
     }
 
