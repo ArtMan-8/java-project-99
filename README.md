@@ -6,14 +6,20 @@
 
 # Менеджер задач
 
+Task Manager – система управления задачами, подобная http://www.redmine.org/. Она позволяет ставить задачи, назначать исполнителей и менять их статусы. Для работы с системой требуется регистрация и аутентификация.
+
+**Username:** `hexlet@example.com`<br />
+**Password:** `qwerty`
+
 ### Запуск локально
 
 ```sh
-make run
+make run-dev
 ```
 
 Проект будет доступен по http://localhost:8080/
 
 ### Посмотреть онлайн
 
-[java-task-manager](https://artman-8-java-project-99-8a5c.twc1.net/welcome)
+[java-task-manager](https://artman-8-java-project-99-8a5c.twc1.net)
+[swagger](https://artman-8-java-project-99-8a5c.twc1.net/swagger-ui/index.html)

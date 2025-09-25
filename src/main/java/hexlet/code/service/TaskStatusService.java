@@ -24,10 +24,6 @@ public class TaskStatusService {
         return taskStatusMapper.toResponseDTOList(taskStatusRepository.findAll());
     }
 
-    public long getTotalTaskStatusesCount() {
-        return taskStatusRepository.count();
-    }
-
     public Optional<TaskStatusResponseDTO> getTaskStatusById(Long id) {
         return taskStatusRepository.findById(id)
                 .map(taskStatusMapper::toResponseDTO);

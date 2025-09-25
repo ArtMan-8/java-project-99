@@ -12,7 +12,10 @@ import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
+import hexlet.code.specification.TaskSpecification;
+import hexlet.code.dto.Task.TaskFilterDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +34,9 @@ public class TaskService {
     private final LabelRepository labelRepository;
     private final TaskMapper taskMapper;
 
-    public List<TaskResponseDTO> getAllTasks() {
-        return taskMapper.toResponseDTOList(taskRepository.findAll());
-    }
-
-    public long getTotalTasksCount() {
-        return taskRepository.count();
+    public List<TaskResponseDTO> getAllTasks(TaskFilterDTO filter) {
+        Specification<Task> spec = TaskSpecification.buildSpecification(filter);
+        return taskMapper.toResponseDTOList(taskRepository.findAll(spec));
     }
 
     public Optional<TaskResponseDTO> getTaskById(Long id) {
@@ -47,7 +47,6 @@ public class TaskService {
     public TaskResponseDTO createTask(TaskCreateDTO taskCreateDTO) {
         Task task = taskMapper.toEntity(taskCreateDTO);
 
-        // Устанавливаем связи, которые не могут быть автоматически замаплены
         if (taskCreateDTO.getAssigneeId() != null) {
             User assignee = userRepository.findById(taskCreateDTO.getAssigneeId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + taskCreateDTO.getAssigneeId()));
@@ -75,10 +74,8 @@ public class TaskService {
     public Optional<TaskResponseDTO> updateTask(Long id, TaskUpdateDTO taskUpdateDTO) {
         return taskRepository.findById(id)
                 .map(task -> {
-                    // Обновляем простые поля через маппер
                     taskMapper.updateEntity(taskUpdateDTO, task);
 
-                    // Обновляем связи вручную
                     var assigneeId = taskUpdateDTO.getAssigneeId();
                     if (assigneeId != null) {
                         User assignee = userRepository.findById(assigneeId)

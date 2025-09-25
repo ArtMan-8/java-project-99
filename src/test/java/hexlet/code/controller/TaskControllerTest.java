@@ -161,4 +161,27 @@ class TaskControllerTest {
         mockMvc.perform(delete("/api/tasks/999").with(jwt()))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void shouldGetFilteredTasks() throws Exception {
+        mockMvc.perform(get("/api/tasks?titleCont=Test").with(jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+
+        mockMvc.perform(get("/api/tasks?assigneeId=1").with(jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+
+        mockMvc.perform(get("/api/tasks?status=draft").with(jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+
+        mockMvc.perform(get("/api/tasks?labelId=1").with(jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+
+        mockMvc.perform(get("/api/tasks?titleCont=Test&assigneeId=1&status=draft&labelId=1").with(jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
 }

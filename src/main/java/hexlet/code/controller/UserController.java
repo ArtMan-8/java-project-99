@@ -33,9 +33,8 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<UserResponseDTO> users = userService.getAllUsers();
-        long totalCount = userService.getTotalUsersCount();
         return ResponseEntity.ok()
-                .header("X-Total-Count", String.valueOf(totalCount))
+                .header("X-Total-Count", String.valueOf(users.size()))
                 .body(users);
     }
 
