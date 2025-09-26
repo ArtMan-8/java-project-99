@@ -8,6 +8,7 @@ import hexlet.code.model.Task;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.MappingConstants;
 import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
@@ -15,12 +16,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(
+    componentModel = MappingConstants.ComponentModel.SPRING,
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
 public interface TaskMapper {
-
-    @Mapping(source = "taskStatus.slug", target = "status")
+    @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "assignee.id", target = "assigneeId")
-    @Mapping(source = "labels", target = "labelIds", qualifiedByName = "labelsToIds")
+    @Mapping(source = "taskStatus.slug", target = "status")
+    @Mapping(source = "labels", target = "taskLabelIds", qualifiedByName = "labelsToIds")
     TaskResponseDTO toResponseDTO(Task task);
 
     List<TaskResponseDTO> toResponseDTOList(List<Task> tasks);
@@ -44,6 +48,7 @@ public interface TaskMapper {
         if (labels == null) {
             return null;
         }
+
         return labels.stream()
             .map(Label::getId)
             .collect(Collectors.toSet());

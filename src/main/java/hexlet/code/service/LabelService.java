@@ -7,12 +7,10 @@ import hexlet.code.mapper.LabelMapper;
 import hexlet.code.model.Label;
 import hexlet.code.repository.LabelRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -25,29 +23,31 @@ public class LabelService {
         return labelMapper.toResponseDTOList(labelRepository.findAll());
     }
 
-    public Optional<LabelResponseDTO> getLabelById(Long id) {
+    public LabelResponseDTO getLabelById(Long id) {
         return labelRepository.findById(id)
-                .map(labelMapper::toResponseDTO);
+                .map(labelMapper::toResponseDTO)
+                .orElse(null);
     }
 
     public LabelResponseDTO createLabel(LabelCreateDTO labelCreateDTO) {
-        String labelName = labelCreateDTO.getName();
-        if (labelRepository.findByName(labelName).isPresent()) {
-            throw new DataIntegrityViolationException("Label with name '" + labelName + "' already exists");
+        if (labelRepository.findByName(labelCreateDTO.getName()).isPresent()) {
+            throw new RuntimeException("Label with this name already exists");
         }
 
         Label label = labelMapper.toEntity(labelCreateDTO);
-        Label savedLabel = labelRepository.save(label);
-        return labelMapper.toResponseDTO(savedLabel);
+        labelRepository.save(label);
+        return labelMapper.toResponseDTO(label);
     }
 
-    public Optional<LabelResponseDTO> updateLabel(Long id, LabelUpdateDTO labelUpdateDTO) {
-        return labelRepository.findById(id)
-                .map(label -> {
-                    labelMapper.updateEntity(labelUpdateDTO, label);
-                    Label savedLabel = labelRepository.save(label);
-                    return labelMapper.toResponseDTO(savedLabel);
-                });
+    public LabelResponseDTO updateLabel(Long id, LabelUpdateDTO labelUpdateDTO) {
+        Label label = labelRepository.findById(id).orElse(null);
+        if (label == null) {
+            return null;
+        }
+
+        labelMapper.updateEntity(labelUpdateDTO, label);
+        labelRepository.save(label);
+        return labelMapper.toResponseDTO(label);
     }
 
     public boolean deleteLabel(Long id) {

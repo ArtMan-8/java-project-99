@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -40,23 +39,23 @@ public class TaskController {
 
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponseDTO> getTaskById(@PathVariable Long id) {
-        Optional<TaskResponseDTO> task = taskService.getTaskById(id);
-        return task.map(ResponseEntity::ok)
+        TaskResponseDTO task = taskService.getTaskById(id);
+        return Optional.ofNullable(task).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TaskResponseDTO createTask(@Valid @RequestBody TaskCreateDTO taskCreateDTO) {
-        return taskService.createTask(taskCreateDTO);
+    public ResponseEntity<TaskResponseDTO> createTask(@Valid @RequestBody TaskCreateDTO taskCreateDTO) {
+        TaskResponseDTO task = taskService.createTask(taskCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(task);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponseDTO> updateTask(
             @PathVariable Long id,
             @Valid @RequestBody TaskUpdateDTO taskUpdateDTO) {
-        Optional<TaskResponseDTO> task = taskService.updateTask(id, taskUpdateDTO);
-        return task.map(ResponseEntity::ok)
+        TaskResponseDTO task = taskService.updateTask(id, taskUpdateDTO);
+        return Optional.ofNullable(task).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 

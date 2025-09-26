@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -42,16 +41,17 @@ public class TaskStatusController {
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskStatusResponseDTO> getTaskStatusById(@PathVariable Long id) {
-        Optional<TaskStatusResponseDTO> taskStatus = taskStatusService.getTaskStatusById(id);
-        return taskStatus.map(ResponseEntity::ok)
+        TaskStatusResponseDTO taskStatus = taskStatusService.getTaskStatusById(id);
+        return Optional.ofNullable(taskStatus).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    @ResponseStatus(HttpStatus.CREATED)
-    public TaskStatusResponseDTO createTaskStatus(@Valid @RequestBody TaskStatusCreateDTO taskStatusCreateDTO) {
-        return taskStatusService.createTaskStatus(taskStatusCreateDTO);
+    public ResponseEntity<TaskStatusResponseDTO> createTaskStatus(
+            @Valid @RequestBody TaskStatusCreateDTO taskStatusCreateDTO) {
+        TaskStatusResponseDTO status = taskStatusService.createTaskStatus(taskStatusCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(status);
     }
 
     @PutMapping("/{id}")
@@ -59,8 +59,8 @@ public class TaskStatusController {
     public ResponseEntity<TaskStatusResponseDTO> updateTaskStatus(
             @PathVariable Long id,
             @Valid @RequestBody TaskStatusUpdateDTO taskStatusUpdateDTO) {
-        Optional<TaskStatusResponseDTO> taskStatus = taskStatusService.updateTaskStatus(id, taskStatusUpdateDTO);
-        return taskStatus.map(ResponseEntity::ok)
+        TaskStatusResponseDTO taskStatus = taskStatusService.updateTaskStatus(id, taskStatusUpdateDTO);
+        return Optional.ofNullable(taskStatus).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 

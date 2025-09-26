@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -39,23 +38,27 @@ public class LabelController {
 
     @GetMapping("/{id}")
     public ResponseEntity<LabelResponseDTO> getLabelById(@PathVariable Long id) {
-        Optional<LabelResponseDTO> label = labelService.getLabelById(id);
-        return label.map(ResponseEntity::ok)
+        LabelResponseDTO label = labelService.getLabelById(id);
+        return Optional.ofNullable(label).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public LabelResponseDTO createLabel(@Valid @RequestBody LabelCreateDTO labelCreateDTO) {
-        return labelService.createLabel(labelCreateDTO);
+    public ResponseEntity<LabelResponseDTO> createLabel(@Valid @RequestBody LabelCreateDTO labelCreateDTO) {
+        try {
+            LabelResponseDTO label = labelService.createLabel(labelCreateDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(label);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<LabelResponseDTO> updateLabel(
             @PathVariable Long id,
             @Valid @RequestBody LabelUpdateDTO labelUpdateDTO) {
-        Optional<LabelResponseDTO> label = labelService.updateLabel(id, labelUpdateDTO);
-        return label.map(ResponseEntity::ok)
+        LabelResponseDTO label = labelService.updateLabel(id, labelUpdateDTO);
+        return Optional.ofNullable(label).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 

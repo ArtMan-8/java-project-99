@@ -2,7 +2,7 @@ group = "hexlet.code"
 version = "0.0.1-SNAPSHOT"
 
 application {
-    mainClass = "hexlet.code.Application"
+    mainClass = "hexlet.code.AppApplication"
 }
 
 repositories {
@@ -30,6 +30,8 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
     implementation("org.mapstruct:mapstruct:1.6.3")
     implementation("org.postgresql:postgresql")
+    implementation("net.datafaker:datafaker:2.5.1")
+	implementation("org.instancio:instancio-junit:5.5.1")
 
     runtimeOnly("com.h2database:h2")
 
@@ -38,6 +40,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
+    testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.1")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

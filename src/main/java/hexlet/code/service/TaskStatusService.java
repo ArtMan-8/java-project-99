@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -24,24 +23,27 @@ public class TaskStatusService {
         return taskStatusMapper.toResponseDTOList(taskStatusRepository.findAll());
     }
 
-    public Optional<TaskStatusResponseDTO> getTaskStatusById(Long id) {
+    public TaskStatusResponseDTO getTaskStatusById(Long id) {
         return taskStatusRepository.findById(id)
-                .map(taskStatusMapper::toResponseDTO);
+                .map(taskStatusMapper::toResponseDTO)
+                .orElse(null);
     }
 
     public TaskStatusResponseDTO createTaskStatus(TaskStatusCreateDTO taskStatusCreateDTO) {
         TaskStatus taskStatus = taskStatusMapper.toEntity(taskStatusCreateDTO);
-        TaskStatus savedTaskStatus = taskStatusRepository.save(taskStatus);
-        return taskStatusMapper.toResponseDTO(savedTaskStatus);
+        taskStatusRepository.save(taskStatus);
+        return taskStatusMapper.toResponseDTO(taskStatus);
     }
 
-    public Optional<TaskStatusResponseDTO> updateTaskStatus(Long id, TaskStatusUpdateDTO taskStatusUpdateDTO) {
-        return taskStatusRepository.findById(id)
-                .map(taskStatus -> {
-                    taskStatusMapper.updateEntity(taskStatusUpdateDTO, taskStatus);
-                    TaskStatus savedTaskStatus = taskStatusRepository.save(taskStatus);
-                    return taskStatusMapper.toResponseDTO(savedTaskStatus);
-                });
+    public TaskStatusResponseDTO updateTaskStatus(Long id, TaskStatusUpdateDTO taskStatusUpdateDTO) {
+        TaskStatus taskStatus = taskStatusRepository.findById(id).orElse(null);
+        if (taskStatus == null) {
+            return null;
+        }
+
+        taskStatusMapper.updateEntity(taskStatusUpdateDTO, taskStatus);
+        taskStatusRepository.save(taskStatus);
+        return taskStatusMapper.toResponseDTO(taskStatus);
     }
 
     public boolean deleteTaskStatus(Long id) {

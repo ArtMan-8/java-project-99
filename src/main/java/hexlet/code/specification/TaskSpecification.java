@@ -31,7 +31,10 @@ public class TaskSpecification {
                 return criteriaBuilder.conjunction();
             }
 
-            return criteriaBuilder.equal(root.get("assignee").get("id"), assigneeId);
+            return criteriaBuilder.equal(
+                root.get("assignee").get("id"),
+                assigneeId
+            );
         };
     }
 
@@ -41,7 +44,10 @@ public class TaskSpecification {
                 return criteriaBuilder.conjunction();
             }
 
-            return criteriaBuilder.equal(root.get("taskStatus").get("slug"), status);
+            return criteriaBuilder.equal(
+                root.get("taskStatus").get("slug"),
+                status
+            );
         };
     }
 
@@ -51,7 +57,10 @@ public class TaskSpecification {
                 return criteriaBuilder.conjunction();
             }
 
-            return criteriaBuilder.equal(root.join("labels").get("id"), labelId);
+            return criteriaBuilder.equal(
+                root.join("labels").get("id"),
+                labelId
+            );
         };
     }
 }

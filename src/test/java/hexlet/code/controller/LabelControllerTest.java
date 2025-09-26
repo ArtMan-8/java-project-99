@@ -1,37 +1,69 @@
 package hexlet.code.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import hexlet.code.dto.Label.LabelCreateDTO;
 import hexlet.code.dto.Label.LabelUpdateDTO;
+import hexlet.code.model.Label;
+import hexlet.code.utils.TestDataFactory;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
+import java.nio.charset.StandardCharsets;
+
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @Transactional
 class LabelControllerTest {
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private TestDataFactory testDataFactory;
+
+    private Label testLabel;
+
+    @BeforeEach
+    void setUp() {
+        testDataFactory.cleanAll();
+
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .defaultResponseCharacterEncoding(StandardCharsets.UTF_8)
+                .apply(springSecurity())
+                .build();
+
+        testLabel = testDataFactory.createLabel();
+    }
+
+    @AfterEach
+    void cleanUp() {
+        testDataFactory.cleanAll();
+    }
 
     private LabelCreateDTO createValidLabel() {
         LabelCreateDTO label = new LabelCreateDTO();
@@ -42,38 +74,42 @@ class LabelControllerTest {
     @Test
     void shouldCreateLabelSuccessfully() throws Exception {
         LabelCreateDTO label = createValidLabel();
-        mockMvc.perform(post("/api/labels")
+        var result = mockMvc.perform(post("/api/labels")
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(label)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Bug"))
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.createdAt").exists());
+                .andReturn();
+        var body = result.getResponse().getContentAsString();
+
+        assertThatJson(body).and(
+                v -> v.node("name").isEqualTo("Bug"),
+                v -> v.node("id").isPresent(),
+                v -> v.node("createdAt").isPresent()
+        );
     }
 
     @Test
     void shouldGetAllLabels() throws Exception {
-        mockMvc.perform(get("/api/labels").with(jwt()))
+        var result = mockMvc.perform(get("/api/labels").with(jwt()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andReturn();
+        var body = result.getResponse().getContentAsString();
+
+        assertThatJson(body).isArray();
     }
 
     @Test
     void shouldGetLabelById() throws Exception {
-        LabelCreateDTO label = createValidLabel();
-        mockMvc.perform(post("/api/labels")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(label)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists());
-
-        mockMvc.perform(get("/api/labels/1").with(jwt()))
+        var result = mockMvc.perform(get("/api/labels/{id}", testLabel.getId()).with(jwt()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").exists())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.createdAt").exists());
+                .andReturn();
+        var body = result.getResponse().getContentAsString();
+
+        assertThatJson(body).and(
+                v -> v.node("name").isEqualTo(testLabel.getName()),
+                v -> v.node("id").isEqualTo(testLabel.getId())
+        );
     }
 
     @Test
@@ -81,19 +117,24 @@ class LabelControllerTest {
         LabelUpdateDTO updateLabel = new LabelUpdateDTO();
         updateLabel.setName("Feature");
 
-        mockMvc.perform(put("/api/labels/1")
+        var result = mockMvc.perform(put("/api/labels/{id}", testLabel.getId())
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateLabel)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Feature"))
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.createdAt").exists());
+                .andReturn();
+        var body = result.getResponse().getContentAsString();
+
+        assertThatJson(body).and(
+                v -> v.node("name").isEqualTo("Feature"),
+                v -> v.node("id").isEqualTo(testLabel.getId()),
+                v -> v.node("createdAt").isPresent()
+        );
     }
 
     @Test
     void shouldDeleteLabelSuccessfully() throws Exception {
-        mockMvc.perform(delete("/api/labels/1").with(jwt()))
+        mockMvc.perform(delete("/api/labels/{id}", testLabel.getId()).with(jwt()))
                 .andExpect(status().isNoContent());
     }
 
@@ -138,7 +179,7 @@ class LabelControllerTest {
         LabelUpdateDTO updateLabel = new LabelUpdateDTO();
         updateLabel.setName("");
 
-        mockMvc.perform(put("/api/labels/1")
+        mockMvc.perform(put("/api/labels/{id}", testLabel.getId())
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateLabel)))
@@ -150,7 +191,7 @@ class LabelControllerTest {
         LabelUpdateDTO updateLabel = new LabelUpdateDTO();
         updateLabel.setName("ab");
 
-        mockMvc.perform(put("/api/labels/1")
+        mockMvc.perform(put("/api/labels/{id}", testLabel.getId())
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateLabel)))
@@ -160,7 +201,7 @@ class LabelControllerTest {
     @Test
     void shouldReturn401WhenAccessingWithoutAuth() throws Exception {
         mockMvc.perform(get("/api/labels")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/labels/1")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/labels/{id}", testLabel.getId())).andExpect(status().isUnauthorized());
 
         LabelCreateDTO label = createValidLabel();
         mockMvc.perform(post("/api/labels")
@@ -170,12 +211,12 @@ class LabelControllerTest {
 
         LabelUpdateDTO updateLabel = new LabelUpdateDTO();
         updateLabel.setName("Updated Label");
-        mockMvc.perform(put("/api/labels/1")
+        mockMvc.perform(put("/api/labels/{id}", testLabel.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateLabel)))
                 .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(delete("/api/labels/1")).andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/labels/{id}", testLabel.getId())).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -218,7 +259,7 @@ class LabelControllerTest {
     void shouldHandlePartialUpdate() throws Exception {
         LabelUpdateDTO updateLabel = new LabelUpdateDTO();
 
-        mockMvc.perform(put("/api/labels/1")
+        mockMvc.perform(put("/api/labels/{id}", testLabel.getId())
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateLabel)))

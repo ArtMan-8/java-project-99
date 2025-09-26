@@ -1,7 +1,7 @@
 package hexlet.code.controller;
 
 import hexlet.code.dto.Auth.AuthRequestDTO;
-import hexlet.code.util.JwtUtils;
+import hexlet.code.utils.JwtUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,7 +27,6 @@ public class AuthController {
         );
 
         authenticationManager.authenticate(authToken);
-
         return jwtUtils.generateToken(authRequest.getUsername());
     }
 }

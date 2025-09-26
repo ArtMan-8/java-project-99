@@ -1,4 +1,4 @@
-package hexlet.code.util;
+package hexlet.code.utils;
 
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
@@ -7,26 +7,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 @Component
 @RequiredArgsConstructor
 public class UserUtils {
     private final UserRepository userRepository;
 
-    public Optional<User> getCurrentUser() {
+    public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            return Optional.empty();
+            return null;
         }
 
         String email = authentication.getName();
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmail(email).get();
     }
 
     public boolean isCurrentUser(Long userId) {
-        return getCurrentUser()
-                .map(user -> user.getId().equals(userId))
-                .orElse(false);
+        return getCurrentUser().getId() == userId;
     }
 }

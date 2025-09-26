@@ -19,9 +19,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -29,9 +27,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class TaskService {
     private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
-    private final TaskStatusRepository taskStatusRepository;
     private final LabelRepository labelRepository;
+    private final TaskStatusRepository taskStatusRepository;
+    private final UserRepository userRepository;
     private final TaskMapper taskMapper;
 
     public List<TaskResponseDTO> getAllTasks(TaskFilterDTO filter) {
@@ -39,70 +37,62 @@ public class TaskService {
         return taskMapper.toResponseDTOList(taskRepository.findAll(spec));
     }
 
-    public Optional<TaskResponseDTO> getTaskById(Long id) {
+    public TaskResponseDTO getTaskById(Long id) {
         return taskRepository.findById(id)
-                .map(taskMapper::toResponseDTO);
+                .map(taskMapper::toResponseDTO)
+                .orElse(null);
     }
 
     public TaskResponseDTO createTask(TaskCreateDTO taskCreateDTO) {
         Task task = taskMapper.toEntity(taskCreateDTO);
 
-        if (taskCreateDTO.getAssigneeId() != null) {
-            User assignee = userRepository.findById(taskCreateDTO.getAssigneeId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + taskCreateDTO.getAssigneeId()));
+        String statusSlug = taskCreateDTO.getStatus();
+        TaskStatus taskStatus = taskStatusRepository.findBySlug(taskCreateDTO.getStatus())
+                .orElseThrow(() -> new RuntimeException("TaskStatus not found with slug: " + statusSlug));
+        task.setTaskStatus(taskStatus);
+
+        var assigneeId = taskCreateDTO.getAssigneeId();
+        if (assigneeId != null) {
+            User assignee = userRepository.findById(assigneeId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + assigneeId));
             task.setAssignee(assignee);
         }
 
-        TaskStatus taskStatus = taskStatusRepository.findBySlug(taskCreateDTO.getStatus())
-            .orElseThrow(() -> new RuntimeException("TaskStatus not found with slug: " + taskCreateDTO.getStatus()));
-        task.setTaskStatus(taskStatus);
+        Set<Label> existingLabels = labelRepository.findByIdIn(taskCreateDTO.getTaskLabelIds());
+        task.setLabels(existingLabels);
 
-        if (taskCreateDTO.getLabelIds() != null && !taskCreateDTO.getLabelIds().isEmpty()) {
-            Set<Label> labels = new HashSet<>();
-            for (Long labelId : taskCreateDTO.getLabelIds()) {
-                Label label = labelRepository.findById(labelId)
-                    .orElseThrow(() -> new RuntimeException("Label not found with id: " + labelId));
-                labels.add(label);
-            }
-            task.setLabels(labels);
-        }
-
-        Task savedTask = taskRepository.save(task);
-        return taskMapper.toResponseDTO(savedTask);
+        taskRepository.save(task);
+        return taskMapper.toResponseDTO(task);
     }
 
-    public Optional<TaskResponseDTO> updateTask(Long id, TaskUpdateDTO taskUpdateDTO) {
-        return taskRepository.findById(id)
-                .map(task -> {
-                    taskMapper.updateEntity(taskUpdateDTO, task);
+    public TaskResponseDTO updateTask(Long id, TaskUpdateDTO taskUpdateDTO) {
+        Task task = taskRepository.findById(id).orElse(null);
+        if (task == null) {
+            return null;
+        }
 
-                    var assigneeId = taskUpdateDTO.getAssigneeId();
-                    if (assigneeId != null) {
-                        User assignee = userRepository.findById(assigneeId)
-                            .orElseThrow(() -> new RuntimeException("User not found with id: " + assigneeId));
-                        task.setAssignee(assignee);
-                    }
+        taskMapper.updateEntity(taskUpdateDTO, task);
 
-                    var statusName = taskUpdateDTO.getStatus();
-                    if (statusName != null) {
-                        TaskStatus taskStatus = taskStatusRepository.findBySlug(statusName)
-                            .orElseThrow(() -> new RuntimeException("TaskStatus not found with slug: " + statusName));
-                        task.setTaskStatus(taskStatus);
-                    }
+        String statusSlug = taskUpdateDTO.getStatus();
+        TaskStatus taskStatus = taskStatusRepository.findBySlug(statusSlug)
+                .orElseThrow(() -> new RuntimeException("TaskStatus not found with slug: " + statusSlug));
+        task.setTaskStatus(taskStatus);
 
-                    if (taskUpdateDTO.getLabelIds() != null) {
-                        Set<Label> labels = new HashSet<>();
-                        for (Long labelId : taskUpdateDTO.getLabelIds()) {
-                            Label label = labelRepository.findById(labelId)
-                                .orElseThrow(() -> new RuntimeException("Label not found with id: " + labelId));
-                            labels.add(label);
-                        }
-                        task.setLabels(labels);
-                    }
+        var assigneeId = taskUpdateDTO.getAssigneeId();
+        if (assigneeId != null) {
+            User assignee = userRepository.findById(assigneeId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + assigneeId));
+            task.setAssignee(assignee);
+        }
 
-                    Task savedTask = taskRepository.save(task);
-                    return taskMapper.toResponseDTO(savedTask);
-                });
+        var taskLabelIds = taskUpdateDTO.getTaskLabelIds();
+        if (taskLabelIds != null) {
+            Set<Label> existingLabels = labelRepository.findByIdIn(taskLabelIds);
+            task.setLabels(existingLabels);
+        }
+
+        taskRepository.save(task);
+        return taskMapper.toResponseDTO(task);
     }
 
     public boolean deleteTask(Long id) {

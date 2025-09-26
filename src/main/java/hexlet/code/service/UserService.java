@@ -10,48 +10,46 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public List<UserResponseDTO> getAllUsers() {
         return userMapper.toResponseDTOList(userRepository.findAll());
     }
 
-    public Optional<UserResponseDTO> getUserById(Long id) {
+    public UserResponseDTO getUserById(Long id) {
         return userRepository.findById(id)
-                .map(userMapper::toResponseDTO);
+                .map(userMapper::toResponseDTO)
+                .orElse(null);
     }
 
     public UserResponseDTO createUser(UserCreateDTO userCreateDTO) {
         User user = userMapper.toEntity(userCreateDTO);
         user.setPassword(passwordEncoder.encode(userCreateDTO.getPassword()));
-        User savedUser = userRepository.save(user);
-        return userMapper.toResponseDTO(savedUser);
+        userRepository.save(user);
+        return userMapper.toResponseDTO(user);
     }
 
-    public Optional<UserResponseDTO> updateUser(Long id, UserUpdateDTO userUpdateDTO) {
-        return userRepository.findById(id)
-                .map(user -> {
-                    userMapper.updateEntity(userUpdateDTO, user);
-                    if (userUpdateDTO.getPassword() != null) {
-                        user.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
-                    }
-                    User savedUser = userRepository.save(user);
-                    return userMapper.toResponseDTO(savedUser);
-                });
+    public UserResponseDTO updateUser(Long id, UserUpdateDTO userUpdateDTO) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
+            return null;
+        }
+
+        userMapper.updateEntity(userUpdateDTO, user);
+        userRepository.save(user);
+        return userMapper.toResponseDTO(user);
     }
 
     public boolean deleteUser(Long id) {
@@ -64,9 +62,9 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws RuntimeException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())

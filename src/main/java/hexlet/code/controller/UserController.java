@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -40,15 +39,15 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
-        Optional<UserResponseDTO> user = userService.getUserById(id);
-        return user.map(ResponseEntity::ok)
+        UserResponseDTO user = userService.getUserById(id);
+        return Optional.ofNullable(user).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserResponseDTO createUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
-        return userService.createUser(userCreateDTO);
+    public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
+        UserResponseDTO user = userService.createUser(userCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
     @PutMapping("/{id}")
@@ -56,8 +55,8 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateDTO userUpdateDTO) {
-        Optional<UserResponseDTO> user = userService.updateUser(id, userUpdateDTO);
-        return user.map(ResponseEntity::ok)
+        UserResponseDTO user = userService.updateUser(id, userUpdateDTO);
+        return Optional.ofNullable(user).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
