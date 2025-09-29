@@ -1,11 +1,9 @@
 package hexlet.code.util;
 
 import hexlet.code.model.Label;
-import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.model.User;
 import hexlet.code.repository.LabelRepository;
-import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +17,6 @@ import org.springframework.stereotype.Component;
 public class DataInitializer implements ApplicationRunner {
     private final UserRepository userRepository;
     private final TaskStatusRepository taskStatusRepository;
-    private final TaskRepository taskRepository;
     private final LabelRepository labelRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -28,7 +25,6 @@ public class DataInitializer implements ApplicationRunner {
         initDefaultUsers();
         initDefaultTaskStatuses();
         initDefaultLabels();
-        initDefaultTasks();
     }
 
     private void initDefaultUsers() {
@@ -78,23 +74,6 @@ public class DataInitializer implements ApplicationRunner {
                 Label label = new Label();
                 label.setName(labelName);
                 labelRepository.save(label);
-            }
-        }
-    }
-
-    private void initDefaultTasks() {
-        if (taskRepository.count() == 0) {
-            User user = userRepository.findByEmail("hexlet@example.com").orElse(null);
-            TaskStatus status = taskStatusRepository.findBySlug("draft").orElse(null);
-
-            if (user != null && status != null) {
-                Task task = new Task();
-                task.setTitle("Test Task");
-                task.setContent("Test content");
-                task.setIndex(1);
-                task.setAssignee(user);
-                task.setTaskStatus(status);
-                taskRepository.save(task);
             }
         }
     }

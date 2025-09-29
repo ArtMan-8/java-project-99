@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,7 @@ public class LabelController {
     private final LabelService labelService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<LabelResponseDTO>> getAllLabels() {
         List<LabelResponseDTO> labels = labelService.getAllLabels();
         return ResponseEntity.ok()
@@ -38,6 +40,7 @@ public class LabelController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<LabelResponseDTO> getLabelById(@PathVariable Long id) {
         Optional<LabelResponseDTO> label = labelService.getLabelById(id);
         return label.map(ResponseEntity::ok)
@@ -45,12 +48,14 @@ public class LabelController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     public LabelResponseDTO createLabel(@Valid @RequestBody LabelCreateDTO labelCreateDTO) {
         return labelService.createLabel(labelCreateDTO);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<LabelResponseDTO> updateLabel(
             @PathVariable Long id,
             @Valid @RequestBody LabelUpdateDTO labelUpdateDTO) {
@@ -60,6 +65,7 @@ public class LabelController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteLabel(@PathVariable Long id) {
         boolean deleted = labelService.deleteLabel(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();

@@ -57,9 +57,9 @@ public class TaskService {
             .orElseThrow(() -> new RuntimeException("TaskStatus not found with slug: " + taskCreateDTO.getStatus()));
         task.setTaskStatus(taskStatus);
 
-        if (taskCreateDTO.getLabelIds() != null && !taskCreateDTO.getLabelIds().isEmpty()) {
+        if (taskCreateDTO.getTaskLabelIds() != null && !taskCreateDTO.getTaskLabelIds().isEmpty()) {
             Set<Label> labels = new HashSet<>();
-            for (Long labelId : taskCreateDTO.getLabelIds()) {
+            for (Long labelId : taskCreateDTO.getTaskLabelIds()) {
                 Label label = labelRepository.findById(labelId)
                     .orElseThrow(() -> new RuntimeException("Label not found with id: " + labelId));
                 labels.add(label);
@@ -90,9 +90,9 @@ public class TaskService {
                         task.setTaskStatus(taskStatus);
                     }
 
-                    if (taskUpdateDTO.getLabelIds() != null) {
+                    if (taskUpdateDTO.getTaskLabelIds() != null) {
                         Set<Label> labels = new HashSet<>();
-                        for (Long labelId : taskUpdateDTO.getLabelIds()) {
+                        for (Long labelId : taskUpdateDTO.getTaskLabelIds()) {
                             Label label = labelRepository.findById(labelId)
                                 .orElseThrow(() -> new RuntimeException("Label not found with id: " + labelId));
                             labels.add(label);

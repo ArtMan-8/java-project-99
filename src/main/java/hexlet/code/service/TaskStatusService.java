@@ -3,8 +3,10 @@ package hexlet.code.service;
 import hexlet.code.dto.TaskStatus.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatus.TaskStatusResponseDTO;
 import hexlet.code.dto.TaskStatus.TaskStatusUpdateDTO;
+import hexlet.code.exception.StatusHasTasksException;
 import hexlet.code.mapper.TaskStatusMapper;
 import hexlet.code.model.TaskStatus;
+import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TaskStatusService {
     private final TaskStatusRepository taskStatusRepository;
+    private final TaskRepository taskRepository;
     private final TaskStatusMapper taskStatusMapper;
 
     public List<TaskStatusResponseDTO> getAllTaskStatuses() {
@@ -46,6 +49,12 @@ public class TaskStatusService {
 
     public boolean deleteTaskStatus(Long id) {
         if (taskStatusRepository.existsById(id)) {
+            boolean hasTasks = taskRepository.existsByTaskStatusId(id);
+            if (hasTasks) {
+                throw new StatusHasTasksException(
+                    "Cannot delete task status with id " + id + " because there are tasks with this status");
+            }
+
             taskStatusRepository.deleteById(id);
             return true;
         }

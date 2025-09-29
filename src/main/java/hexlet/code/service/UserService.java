@@ -3,8 +3,10 @@ package hexlet.code.service;
 import hexlet.code.dto.User.UserCreateDTO;
 import hexlet.code.dto.User.UserResponseDTO;
 import hexlet.code.dto.User.UserUpdateDTO;
+import hexlet.code.exception.UserHasTasksException;
 import hexlet.code.mapper.UserMapper;
 import hexlet.code.model.User;
+import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,6 +25,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final TaskRepository taskRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
@@ -56,6 +59,12 @@ public class UserService implements UserDetailsService {
 
     public boolean deleteUser(Long id) {
         if (userRepository.existsById(id)) {
+            boolean hasTasks = taskRepository.existsByAssigneeId(id);
+            if (hasTasks) {
+                throw new UserHasTasksException(
+                    "Cannot delete user with id " + id + " because they have assigned tasks");
+            }
+
             userRepository.deleteById(id);
             return true;
         }

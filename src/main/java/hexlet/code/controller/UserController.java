@@ -31,6 +31,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<UserResponseDTO> users = userService.getAllUsers();
         return ResponseEntity.ok()
@@ -39,6 +40,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
         Optional<UserResponseDTO> user = userService.getUserById(id);
         return user.map(ResponseEntity::ok)
@@ -46,6 +48,7 @@ public class UserController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDTO createUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
         return userService.createUser(userCreateDTO);

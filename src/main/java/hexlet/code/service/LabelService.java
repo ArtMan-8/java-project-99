@@ -3,9 +3,11 @@ package hexlet.code.service;
 import hexlet.code.dto.Label.LabelCreateDTO;
 import hexlet.code.dto.Label.LabelResponseDTO;
 import hexlet.code.dto.Label.LabelUpdateDTO;
+import hexlet.code.exception.LabelHasTasksException;
 import hexlet.code.mapper.LabelMapper;
 import hexlet.code.model.Label;
 import hexlet.code.repository.LabelRepository;
+import hexlet.code.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LabelService {
     private final LabelRepository labelRepository;
+    private final TaskRepository taskRepository;
     private final LabelMapper labelMapper;
 
     public List<LabelResponseDTO> getAllLabels() {
@@ -52,6 +55,12 @@ public class LabelService {
 
     public boolean deleteLabel(Long id) {
         if (labelRepository.existsById(id)) {
+            boolean hasTasks = taskRepository.existsByLabelsId(id);
+            if (hasTasks) {
+                throw new LabelHasTasksException(
+                    "Cannot delete label with id " + id + " because there are tasks with this label");
+            }
+
             labelRepository.deleteById(id);
             return true;
         }

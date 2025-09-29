@@ -20,7 +20,7 @@ public interface TaskMapper {
 
     @Mapping(source = "taskStatus.slug", target = "status")
     @Mapping(source = "assignee.id", target = "assigneeId")
-    @Mapping(source = "labels", target = "labelIds", qualifiedByName = "labelsToIds")
+    @Mapping(source = "labels", target = "taskLabelIds", qualifiedByName = "labelsToIds")
     TaskResponseDTO toResponseDTO(Task task);
 
     List<TaskResponseDTO> toResponseDTOList(List<Task> tasks);

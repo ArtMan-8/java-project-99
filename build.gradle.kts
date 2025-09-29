@@ -30,8 +30,6 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
     implementation("org.mapstruct:mapstruct:1.6.3")
     implementation("org.postgresql:postgresql")
-    implementation("net.datafaker:datafaker:2.5.1")
-	implementation("org.instancio:instancio-junit:5.5.1")
 
     runtimeOnly("com.h2database:h2")
 

@@ -19,5 +19,5 @@ public class TaskUpdateDTO {
     @Size(min = 1)
     private String status;
 
-    private Set<Long> labelIds;
+    private Set<Long> taskLabelIds;
 }
