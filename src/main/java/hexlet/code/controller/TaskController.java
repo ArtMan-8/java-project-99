@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -32,7 +30,6 @@ public class TaskController {
     private final TaskService taskService;
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TaskResponseDTO>> getAllTasks(TaskFilterDTO filter) {
         List<TaskResponseDTO> tasks = taskService.getAllTasks(filter);
         return ResponseEntity.ok()
@@ -41,34 +38,26 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskResponseDTO> getTaskById(@PathVariable Long id) {
-        Optional<TaskResponseDTO> task = taskService.getTaskById(id);
-        return task.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public TaskResponseDTO getTaskById(@PathVariable Long id) {
+        return taskService.getTaskById(id);
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     public TaskResponseDTO createTask(@Valid @RequestBody TaskCreateDTO taskCreateDTO) {
         return taskService.createTask(taskCreateDTO);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskResponseDTO> updateTask(
+    public TaskResponseDTO updateTask(
             @PathVariable Long id,
             @Valid @RequestBody TaskUpdateDTO taskUpdateDTO) {
-        Optional<TaskResponseDTO> task = taskService.updateTask(id, taskUpdateDTO);
-        return task.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return taskService.updateTask(id, taskUpdateDTO);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        boolean deleted = taskService.deleteTask(id);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
     }
 }

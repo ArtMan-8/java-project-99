@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/task_statuses")
@@ -31,7 +29,6 @@ public class TaskStatusController {
     private final TaskStatusService taskStatusService;
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TaskStatusResponseDTO>> getAllTaskStatuses() {
         List<TaskStatusResponseDTO> taskStatuses = taskStatusService.getAllTaskStatuses();
         return ResponseEntity.ok()
@@ -40,34 +37,26 @@ public class TaskStatusController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskStatusResponseDTO> getTaskStatusById(@PathVariable Long id) {
-        Optional<TaskStatusResponseDTO> taskStatus = taskStatusService.getTaskStatusById(id);
-        return taskStatus.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public TaskStatusResponseDTO getTaskStatusById(@PathVariable Long id) {
+        return taskStatusService.getTaskStatusById(id);
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     public TaskStatusResponseDTO createTaskStatus(@Valid @RequestBody TaskStatusCreateDTO taskStatusCreateDTO) {
         return taskStatusService.createTaskStatus(taskStatusCreateDTO);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskStatusResponseDTO> updateTaskStatus(
+    public TaskStatusResponseDTO updateTaskStatus(
             @PathVariable Long id,
             @Valid @RequestBody TaskStatusUpdateDTO taskStatusUpdateDTO) {
-        Optional<TaskStatusResponseDTO> taskStatus = taskStatusService.updateTaskStatus(id, taskStatusUpdateDTO);
-        return taskStatus.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return taskStatusService.updateTaskStatus(id, taskStatusUpdateDTO);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteTaskStatus(@PathVariable Long id) {
-        boolean deleted = taskStatusService.deleteTaskStatus(id);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTaskStatus(@PathVariable Long id) {
+        taskStatusService.deleteTaskStatus(id);
     }
 }

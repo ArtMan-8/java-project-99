@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -31,7 +30,6 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<UserResponseDTO> users = userService.getAllUsers();
         return ResponseEntity.ok()
@@ -40,15 +38,11 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
-        Optional<UserResponseDTO> user = userService.getUserById(id);
-        return user.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public UserResponseDTO getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDTO createUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
         return userService.createUser(userCreateDTO);
@@ -56,18 +50,16 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("@userUtils.isCurrentUser(#id)")
-    public ResponseEntity<UserResponseDTO> updateUser(
+    public UserResponseDTO updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateDTO userUpdateDTO) {
-        Optional<UserResponseDTO> user = userService.updateUser(id, userUpdateDTO);
-        return user.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return userService.updateUser(id, userUpdateDTO);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("@userUtils.isCurrentUser(#id)")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        boolean deleted = userService.deleteUser(id);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
     }
 }

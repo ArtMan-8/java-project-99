@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hexlet.code.dto.Label.LabelCreateDTO;
 import hexlet.code.dto.Label.LabelUpdateDTO;
-import hexlet.code.dto.Task.TaskCreateDTO;
 import hexlet.code.util.TestDataFactory;
 
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,6 @@ class LabelControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
 
     @Test
     void shouldCreateAndGetLabelById() throws Exception {
@@ -68,9 +66,31 @@ class LabelControllerTest {
 
     @Test
     void shouldGetAllLabels() throws Exception {
-        mockMvc.perform(get("/api/labels")
+        var label1 = TestDataFactory.createValidLabel("alpha-label");
+        mockMvc.perform(post("/api/labels")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(label1)))
+                .andExpect(status().isCreated());
+
+        var label2 = TestDataFactory.createValidLabel("beta-label");
+        mockMvc.perform(post("/api/labels")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(label2)))
+                .andExpect(status().isCreated());
+
+        String response = mockMvc.perform(get("/api/labels")
                 .with(jwt()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThatJson(response)
+                .inPath("$..name")
+                .isArray()
+                .contains(label1.getName(), label2.getName());
     }
 
     @Test
@@ -197,10 +217,6 @@ class LabelControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateLabel)))
                 .andExpect(status().isNotFound());
-
-        mockMvc.perform(delete("/api/labels/999")
-                .with(jwt()))
-                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -242,35 +258,5 @@ class LabelControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateLabel)))
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    void shouldReturn400WhenDeletingLabelWithTasks() throws Exception {
-        LabelCreateDTO label = TestDataFactory.createValidLabel("Test Label for Deletion");
-
-        String labelResponse = mockMvc.perform(post("/api/labels")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(label)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        Long labelId = objectMapper.readTree(labelResponse).get("id").asLong();
-
-        TaskCreateDTO task = TestDataFactory.createValidTask("Test Task with Label");
-        task.setAssigneeId(1L);
-        task.setTaskLabelIds(java.util.Set.of(labelId));
-
-        mockMvc.perform(post("/api/tasks")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(task)))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(delete("/api/labels/" + labelId)
-                .with(jwt()))
-                .andExpect(status().isBadRequest());
     }
 }

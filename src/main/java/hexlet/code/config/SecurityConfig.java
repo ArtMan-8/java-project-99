@@ -36,7 +36,6 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html", "/assets/**").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/api-docs/**").permitAll()
                 .requestMatchers("/api/login").permitAll()
-                .requestMatchers("/api/labels/**").authenticated()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)))

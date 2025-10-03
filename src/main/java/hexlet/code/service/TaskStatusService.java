@@ -3,62 +3,13 @@ package hexlet.code.service;
 import hexlet.code.dto.TaskStatus.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatus.TaskStatusResponseDTO;
 import hexlet.code.dto.TaskStatus.TaskStatusUpdateDTO;
-import hexlet.code.exception.StatusHasTasksException;
-import hexlet.code.mapper.TaskStatusMapper;
-import hexlet.code.model.TaskStatus;
-import hexlet.code.repository.TaskRepository;
-import hexlet.code.repository.TaskStatusRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
-@Service
-@Transactional
-@RequiredArgsConstructor
-public class TaskStatusService {
-    private final TaskStatusRepository taskStatusRepository;
-    private final TaskRepository taskRepository;
-    private final TaskStatusMapper taskStatusMapper;
-
-    public List<TaskStatusResponseDTO> getAllTaskStatuses() {
-        return taskStatusMapper.toResponseDTOList(taskStatusRepository.findAll());
-    }
-
-    public Optional<TaskStatusResponseDTO> getTaskStatusById(Long id) {
-        return taskStatusRepository.findById(id)
-                .map(taskStatusMapper::toResponseDTO);
-    }
-
-    public TaskStatusResponseDTO createTaskStatus(TaskStatusCreateDTO taskStatusCreateDTO) {
-        TaskStatus taskStatus = taskStatusMapper.toEntity(taskStatusCreateDTO);
-        TaskStatus savedTaskStatus = taskStatusRepository.save(taskStatus);
-        return taskStatusMapper.toResponseDTO(savedTaskStatus);
-    }
-
-    public Optional<TaskStatusResponseDTO> updateTaskStatus(Long id, TaskStatusUpdateDTO taskStatusUpdateDTO) {
-        return taskStatusRepository.findById(id)
-                .map(taskStatus -> {
-                    taskStatusMapper.updateEntity(taskStatusUpdateDTO, taskStatus);
-                    TaskStatus savedTaskStatus = taskStatusRepository.save(taskStatus);
-                    return taskStatusMapper.toResponseDTO(savedTaskStatus);
-                });
-    }
-
-    public boolean deleteTaskStatus(Long id) {
-        if (taskStatusRepository.existsById(id)) {
-            boolean hasTasks = taskRepository.existsByTaskStatusId(id);
-            if (hasTasks) {
-                throw new StatusHasTasksException(
-                    "Cannot delete task status with id " + id + " because there are tasks with this status");
-            }
-
-            taskStatusRepository.deleteById(id);
-            return true;
-        }
-
-        return false;
-    }
+public interface TaskStatusService {
+    List<TaskStatusResponseDTO> getAllTaskStatuses();
+    TaskStatusResponseDTO getTaskStatusById(Long id);
+    TaskStatusResponseDTO createTaskStatus(TaskStatusCreateDTO taskStatusCreateDTO);
+    TaskStatusResponseDTO updateTaskStatus(Long id, TaskStatusUpdateDTO taskStatusUpdateDTO);
+    void deleteTaskStatus(Long id);
 }

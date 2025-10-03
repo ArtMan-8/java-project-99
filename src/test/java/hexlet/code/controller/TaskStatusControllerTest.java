@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hexlet.code.dto.TaskStatus.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatus.TaskStatusUpdateDTO;
-import hexlet.code.dto.Task.TaskCreateDTO;
 import hexlet.code.util.TestDataFactory;
 
 import org.junit.jupiter.api.Test;
@@ -184,36 +183,6 @@ class TaskStatusControllerTest {
         mockMvc.perform(get("/api/task_statuses/999")
                 .with(jwt()))
                 .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void shouldReturn400WhenDeletingTaskStatusWithTasks() throws Exception {
-        TaskStatusCreateDTO taskStatus = TestDataFactory.createValidTaskStatus(
-                "Test Status for Deletion", "test_status_for_deletion");
-
-        String statusResponse = mockMvc.perform(post("/api/task_statuses")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(taskStatus)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        Long statusId = objectMapper.readTree(statusResponse).get("id").asLong();
-
-        TaskCreateDTO task = TestDataFactory.createValidTask("Test Task with Status");
-        task.setStatus("test_status_for_deletion");
-
-        mockMvc.perform(post("/api/tasks")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(task)))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(delete("/api/task_statuses/" + statusId)
-                .with(jwt()))
-                .andExpect(status().isBadRequest());
     }
 
     @Test

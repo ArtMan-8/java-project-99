@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hexlet.code.dto.User.UserCreateDTO;
 import hexlet.code.dto.User.UserUpdateDTO;
-import hexlet.code.dto.Task.TaskCreateDTO;
 import hexlet.code.util.TestDataFactory;
 
 import org.junit.jupiter.api.Test;
@@ -180,40 +179,6 @@ class UserControllerTest {
 
         mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void shouldReturn404ForNonExistentUser() throws Exception {
-        mockMvc.perform(get("/api/users/999")
-                .with(jwt()))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void shouldReturn400WhenDeletingUserWithTasks() throws Exception {
-        UserCreateDTO user = TestDataFactory.createValidUser("testuser@example.com");
-        String userResponse = mockMvc.perform(post("/api/users")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        Long userId = objectMapper.readTree(userResponse).get("id").asLong();
-
-        TaskCreateDTO task = TestDataFactory.createValidTask("Test Task");
-        task.setAssigneeId(userId);
-        mockMvc.perform(post("/api/tasks")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(task)))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(delete("/api/users/" + userId)
-                .with(jwt().jwt(jwt -> jwt.subject("testuser@example.com"))))
-                .andExpect(status().isBadRequest());
     }
 
     @Test

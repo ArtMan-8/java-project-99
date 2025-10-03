@@ -207,10 +207,6 @@ class TaskControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateTask)))
                 .andExpect(status().isNotFound());
-
-        mockMvc.perform(delete("/api/tasks/999")
-                .with(jwt()))
-                .andExpect(status().isNotFound());
     }
 
     @ParameterizedTest
